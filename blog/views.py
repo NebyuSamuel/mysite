@@ -1,8 +1,8 @@
 from django.shortcuts import render, get_object_or_404
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.mail import send_mail
-from .models import Post
-from .forms import EmailPostForm
+from .models import Post,Comment
+from .forms import EmailPostForm,CommentForm
 # Create your views here.
 
 # retrieve all pulished posts
@@ -22,7 +22,30 @@ def post_list(request):
 #retrieve a single published post
 def post_detail(request,post_id,year,month,day,slug_name):
     post =  get_object_or_404(Post, pk = post_id,status = 'published', publish__year = year, publish__month = month, publish__day = day, slug = slug_name)
-    return render(request,'blog/post/detail.html',{'post':post})
+
+    # list of active comments using "comments" as a model manager rather than a specific
+    # model manager for Comment model
+    comments = post.comments.filter(active = True)
+
+    new_comment = None
+
+    # check whether there is a POST request or not
+    if request.method == 'POST':
+        # A comment was posted
+        comment_form = CommentForm(data=request.POST)
+
+        # check for validation
+        if comment_form.is_valid():
+            # create a new comment object but not yet saved to the DB
+            new_comment = comment_form.save(commit = False)
+            # assign the current post to the comment
+            new_comment.post = post
+            # save the comment
+            new_comment.save()
+    else:
+        comment_form = CommentForm()
+    return render(request,'blog/post/detail.html',{'post':post,
+    'comments':comments,'new_comment':new_comment,'comment_form':comment_form})
 
 #view for email post form
 def post_share(request,post_id):
