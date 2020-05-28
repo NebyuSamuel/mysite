@@ -8,7 +8,7 @@ from .forms import EmailPostForm
 # retrieve all pulished posts
 def post_list(request):
     object_lst = Post.published.all()
-    paginator = Paginator(object_lst,3) # 3 posts per page
+    paginator = Paginator(object_lst,2) # 2 posts per page
     page = request.GET.get('page') # get the current page
     try:
         posts = paginator.page(page) # try to display the current page
@@ -35,7 +35,7 @@ def post_share(request,post_id):
             post_url = request.build_absolute_uri(post.get_absolute_url())
             subject = f"{cd['name']} recommends you to read {post.title}"
             message = f"Read {post.title} at {post_url} \n\n {cd['name']} comments : {cd['comments']}"
-            send_mail(subject,message,'nebahanijesus12345@gmail.com',[cd['to']])
+            send_mail(subject,message,cd['email'],[cd['to']])
     else :
         form = EmailPostForm()
     return render(request,'blog/post/share.html',{'post':post,'form':form,'sent':sent})

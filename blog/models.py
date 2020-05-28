@@ -14,7 +14,7 @@ class DraftedManager(models.Manager):
         return super(DraftedManager, self).get_queryset() \
             .filter(status = 'draft')
 
-# Create your models here.
+# Post model to handle posts on the blog
 class Post(models.Model):
     # default manager
     objects = models.Manager() 
@@ -46,4 +46,23 @@ class Post(models.Model):
         return reverse("blog:post_detail", args = [
             self.pk,self.publish.year,self.publish.month,self.publish.day,self.slug])
     
+
+# Comment model to handle comments of a post
+class Comment(models.Model):
+    post = models.ForeignKey(Post,on_delete = models.CASCADE, related_name = 'comments')
+    name = models.CharField(max_length = 80)
+    email = models.EmailField()
+    body = models.TextField()
+    created = models.DateTimeField(auto_now_add = True)
+    updated = models.DateTimeField(auto_now = True)
+    active = models.BooleanField(default = True)
+
+    class Meta:
+        ordering = ('-created',)
+
+    def __str__(self):
+        return f'Comment by {self.name} on {self.post}'
+
+
+
 
