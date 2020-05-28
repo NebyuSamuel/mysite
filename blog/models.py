@@ -9,12 +9,10 @@ class PublishedManager(models.Manager):
         return super(PublishedManager,self).get_queryset() \
             .filter(status = 'published')
 
-# custom model manager for status drafted
 class DraftedManager(models.Manager):
     def get_queryset(self):
-        return super(DraftedManager,self).get_queryset() \
+        return super(DraftedManager, self).get_queryset() \
             .filter(status = 'draft')
-
 
 # Create your models here.
 class Post(models.Model):
@@ -22,9 +20,8 @@ class Post(models.Model):
     objects = models.Manager() 
     # custom manager for status published
     published = PublishedManager()
-    # custom manager for status drafted
+    # custom manager for status draft
     drafted = DraftedManager()
-    
     STATUS_CHOICES = (
         ('draft','Drafted'),
         ('published','Published'),
@@ -47,7 +44,6 @@ class Post(models.Model):
 
     def get_absolute_url(self):
         return reverse("blog:post_detail", args = [
-            self.publish.year,self.publish.month,self.publish.day,self.slug
-        ])
+            self.pk,self.publish.year,self.publish.month,self.publish.day,self.slug])
     
 
