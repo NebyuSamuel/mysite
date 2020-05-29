@@ -11,4 +11,36 @@
     <p> 
         <a href = "{% url "blog:post_share" post.id %}"> Share this post </a>
     </p>
+
+    <h2> Similar posts </h2>
+    {% for similar_post in similar_posts%}
+        <p> <a href = "{{similar_post.get_absolute_url}}"> {{similar_post.title}} </a> </p>
+    {% empty %}
+        <h2> There are not similar posts yet </h2>
+    {% endfor %}
+
+    {% with comments.count as total_comments %}
+        <h2> {{ total_comments }} comment{{ total_comments|pluralize}} </h2>
+    {% endwith %}
+
+    {%for comment in comments %}
+        <div class = "comment">
+            <p class = "info">
+                Comment {{forloop.counter}} by {{comment.name}} {{comment.created}}
+            </p>
+        </div>
+        {{comment.body|linebreaks}}
+    {% empty %}
+        <p> There are no comments </p>
+    {% endfor %}
+
+    {% if new_comment %}
+        <h1> new Comment added successfully </h1>
+    {% else %}
+        <form method = 'POST'>
+            {{comment_form.as_p}}
+            {% csrf_token %}
+            <input type = "submit" value = "comment">
+        </form>
+    {% endif %}
 {% endblock %}

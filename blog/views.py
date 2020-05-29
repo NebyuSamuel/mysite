@@ -3,11 +3,20 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.mail import send_mail
 from .models import Post,Comment
 from .forms import EmailPostForm,CommentForm
+from taggit.models import Tag
+from django.db.models import Count
 # Create your views here.
 
+
+
 # retrieve all pulished posts
-def post_list(request):
+def post_list(request,tag_slug=None):
     object_lst = Post.published.all()
+    tag = None
+    if tag_slug:
+        tag = get_object_or_404(Tag,slug = tag_slug)
+        object_lst = object_lst.filter(tags__in = [tag])
+
     paginator = Paginator(object_lst,2) # 2 posts per page
     page = request.GET.get('page') # get the current page
     try:
@@ -17,12 +26,14 @@ def post_list(request):
     except EmptyPage:
         posts = paginator.page(paginator.num_pages)
 
-    return render(request,'blog/post/list.html',{'page':page,'posts':posts})
+    return render(request,'blog/post/list.html',{'page':page,'posts':posts,'tag':tag})
+
+
+
 
 #retrieve a single published post
 def post_detail(request,post_id,year,month,day,slug_name):
     post =  get_object_or_404(Post, pk = post_id,status = 'published', publish__year = year, publish__month = month, publish__day = day, slug = slug_name)
-
     # list of active comments using "comments" as a model manager rather than a specific
     # model manager for Comment model
     comments = post.comments.filter(active = True)
@@ -44,8 +55,15 @@ def post_detail(request,post_id,year,month,day,slug_name):
             new_comment.save()
     else:
         comment_form = CommentForm()
+    post_tags_ids = post.tags.values_list('id',flat = True)
+    similar_posts = Post.published.filter(tags__in = post_tags_ids) \
+        .exclude(pk = post.pk)
+    similar_posts = similar_posts.annotate(same_tags = Count('tags')).order_by('-same_tags','-publish')
     return render(request,'blog/post/detail.html',{'post':post,
-    'comments':comments,'new_comment':new_comment,'comment_form':comment_form})
+    'comments':comments,'new_comment':new_comment,'comment_form':comment_form,'similar_posts':similar_posts})
+
+
+
 
 #view for email post form
 def post_share(request,post_id):
