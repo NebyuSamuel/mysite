@@ -17,7 +17,7 @@ def post_list(request,tag_slug=None):
         tag = get_object_or_404(Tag,slug = tag_slug)
         object_lst = object_lst.filter(tags__in = [tag])
 
-    paginator = Paginator(object_lst,2) # 2 posts per page
+    paginator = Paginator(object_lst,3) # 3 posts per page
     page = request.GET.get('page') # get the current page
     try:
         posts = paginator.page(page) # try to display the current page
